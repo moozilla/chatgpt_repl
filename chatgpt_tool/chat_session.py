@@ -52,9 +52,16 @@ class ChatSession:
             # Check if the user entered a command
             if self.command_processor.is_command(prompt):
                 # Process the command and check if we should exit the input loop
-                should_exit = self.command_processor.process_command(prompt)
+                should_exit, command_prompt = self.command_processor.process_command(prompt)
                 if should_exit:
                     break
+
+                # Check if the command returned a prompt to use
+                if command_prompt is not None:
+                    # Get a response from the chatbot using the prompt returned by the command
+                    response = self.get_chat_response(command_prompt)
+                    if response is not None:
+                        print("\n" + response["message"] + "\n")
             else:
                 # Get a response from the chatbot
                 response = self.get_chat_response(prompt)

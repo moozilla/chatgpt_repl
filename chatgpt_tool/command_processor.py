@@ -1,10 +1,11 @@
-from typing import List
+from typing import List, Tuple
 
 class CommandProcessor:
     def __init__(self):
         self.commands = {
             "/exit": self.exit_command,
-            "/help": self.help_command
+            "/help": self.help_command,
+            "/file": self.file_command
         }
 
     def is_command(self, prompt: str) -> bool:
@@ -26,13 +27,28 @@ class CommandProcessor:
         # Call the command handler
         return command_handler(command_args)
 
-    def exit_command(self, args: List[str]) -> bool:
+    def exit_command(self, args: List[str]) -> Tuple[bool, str]:
         """Exit the program."""
-        return True
+        return True, None
 
-    def help_command(self, args: List[str]) -> bool:
+    def help_command(self, args: List[str]) -> Tuple[bool, str]:
         """List available commands."""
         print("Available commands:")
         for command_name, command_handler in self.commands.items():
             print(f"* {command_name} - {command_handler.__doc__}")
-        return False
+        return False, None
+
+    def file_command(self, args: List[str]) -> Tuple[bool, str]:
+        """Read the contents of a file and use it as a prompt."""
+        if len(args) == 0:
+            print("Usage: /file <filename>")
+            return False, None
+
+        filename = args[0]
+        try:
+            with open(filename, "r") as f:
+                data = f.read()
+            return False, data
+        except IOError:
+            print(f"Error: Could not read file {filename}")
+            return False, None
