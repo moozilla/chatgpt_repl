@@ -32,7 +32,7 @@ class ChatSession:
         if self.conversation_id is None:
             # Save the conversation ID and create the history logger
             self.conversation_id = response["conversation_id"]
-            self.history_logger.set_conversation_id(self.conversation_id)
+            self.history_logger.init(self.conversation_id)
 
         self.history_logger.log_prompt_response(prompt, response)
         return response
