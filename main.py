@@ -1,15 +1,14 @@
-from pathlib import Path
-from revChatGPT.revChatGPT import Chatbot
-import json
 import os
+from pathlib import Path
 from dotenv import load_dotenv
-
+from revChatGPT.revChatGPT import Chatbot
 
 class HistoryLogger:
-    def __init__(self, conversation_id):
+    def __init__(self):
         # Create the history directory if it doesn't exist
         Path("history").mkdir(parents=True, exist_ok=True)
 
+    def set_conversation_id(self, conversation_id):
         # Open the history file for the current conversation ID
         self.history_file = Path(f"history/{conversation_id}.txt")
         self.history_file.touch()
@@ -22,51 +21,72 @@ class HistoryLogger:
 
 
 class ChatSession:
-    def __init__(self, chatbot):
-        self.chatbot = chatbot
-        self.history_logger = None
+    def __init__(self, access_token, initial_prompt, conversation_id=None):
+        self.initial_prompt = initial_prompt
+        self.history_logger = HistoryLogger()
+        self.conversation_id = conversation_id
 
-    def start(self):
+        config = self.create_config(access_token)
+        self.chatbot = self.create_chatbot(config, conversation_id)
+
+    @staticmethod
+    def create_config(access_token):
+        return {
+            "Authorization": access_token
+        }
+
+    @staticmethod
+    def create_chatbot(config, conversation_id=None):
+        return Chatbot(config, conversation_id)
+
+    def get_chat_response(self, prompt):
+        response = self.chatbot.get_chat_response(prompt)
+
+        if not isinstance(response, dict):
+            if isinstance(response, ValueError):
+                print("Warning: The access token may be invalid")
+
+            return None
+
+        if self.conversation_id is None:
+            # Save the conversation ID and create the history logger
+            self.conversation_id = response["conversation_id"]
+            self.history_logger.set_conversation_id(self.conversation_id)
+
+        self.history_logger.log_prompt_response(prompt, response)
+        return response
+
+    def run_prompt_loop(self):
         while True:
             prompt = input("Enter a prompt: ")
             # Check if the user wants to exit
             if prompt.lower() == "exit":
                 break
 
-            response = self.chatbot.get_chat_response(prompt)
-            if not isinstance(response, dict):
-                if isinstance(response, ValueError):
-                    print("Warning: The access token may be invalid")
-
+            response = self.get_chat_response(prompt)
+            if response is None:
                 continue
 
-            if self.history_logger is None:
-                # Set the conversation ID and create the history logger
-                self.history_logger = HistoryLogger(response["conversation_id"])
-
-            self.history_logger.log_prompt_response(prompt, response)
             print(response["message"])
 
+    def start(self):
+        # Provide the initial prompt to the chatbot
+        initial_response = self.get_chat_response(self.initial_prompt)
+        if initial_response is None:
+            # There was an error, most likely an expired session
+            return
+        print(initial_response["message"])
 
-def create_config():
-    load_dotenv()
-    access_token = os.getenv("access_token")
-    config = {
-        "Authorization": access_token
-    }
-    return config
-
-
-def create_chatbot(config):
-    chatbot = Chatbot(config, conversation_id=None)
-    return chatbot
+        # Start the input loop
+        self.run_prompt_loop()
 
 
 def main():
-    config = create_config()
-    chatbot = create_chatbot(config)
+    load_dotenv()
+    access_token = os.getenv("access_token")
+    initial_prompt = os.getenv("initial_prompt")
 
-    chat_session = ChatSession(chatbot)
+    chat_session = ChatSession(access_token, initial_prompt)
     chat_session.start()
 
 
