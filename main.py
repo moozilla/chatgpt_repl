@@ -1,40 +1,47 @@
-import revChatGPT
+from revChatGPT.revChatGPT import Chatbot
 import json
 import os
 from dotenv import load_dotenv
 
-def load_access_token():
-    # Load environment variables from the .env file
+def create_config():
     load_dotenv()
-
-    # Get the access token from the environment variable
     access_token = os.getenv("access_token")
-    return access_token
+    config = {
+        "Authorization": access_token
+    }
+    return config
 
-def create_chatbot(access_token):
-    # Create the chatbot using the access token
-    chatbot = Chatbot(access_token, conversation_id=None)
+def create_chatbot(config):
+    chatbot = Chatbot(config, conversation_id=None)
     return chatbot
 
 def get_chat_response(chatbot, prompt):
-    # Use the chatbot to get a response to the given prompt
     response = chatbot.get_chat_response(prompt)
 
-    # Print the response
+    if not isinstance(response, dict):
+        if isinstance(response, ValueError):
+            print("Warning: The access token may be invalid")
+        # Return None to indicate that an error occurred
+        return None
+
     print(response["message"])
     print(response["conversation_id"])
     print(response["parent_id"])
 
+    return response
+
+
 def main():
-    # Load the access token
-    access_token = load_access_token()
-
-    # Create the chatbot
-    chatbot = create_chatbot(access_token)
-
-    # Use the chatbot to get a response
+    config = create_config()
+    chatbot = create_chatbot(config)
     prompt = "hello, tell me about your capabilities"
-    get_chat_response(chatbot, prompt)
+
+    # Get the chat response
+    response = get_chat_response(chatbot, prompt)
+
+    # Exit if an error occurred
+    if response is None:
+        return
 
 if __name__ == "__main__":
     main()
