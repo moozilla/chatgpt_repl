@@ -41,13 +41,18 @@ class CommandProcessor:
     def file_command(self, args: List[str]) -> Tuple[bool, str]:
         """Read the contents of a file and use it as a prompt."""
         if len(args) == 0:
-            print("Usage: /file <filename>")
+            print("Usage: /file <filename> [<prompt_prefix>]")
             return False, None
 
         filename = args[0]
         try:
             with open(filename, "r") as f:
                 data = f.read()
+
+            prompt_prefix = " ".join(args[1:])
+            if prompt_prefix:
+                data = f"{prompt_prefix}\n\n{data}"
+
             return False, data
         except IOError:
             print(f"Error: Could not read file {filename}")
