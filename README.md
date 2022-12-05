@@ -1,6 +1,6 @@
-# ChatGPT Tool
+# ChatGPT REPL
 
-This tool is a work-in-progress. Most of the code was written by ChatGPT with minimal prompting.
+This tool is a work-in-progress. Most of the code was written by ChatGPT with minimal manual edits.
 
 My vision for this tool is to automate some of the back-and-forth with ChatGPT for faster iteration on coding projects. A few ideas:
 * allow it to clone open source repos, list files or grep for specific strings, then prompt itself with the results
@@ -8,6 +8,10 @@ My vision for this tool is to automate some of the back-and-forth with ChatGPT f
     * automatically fix errors by forwarding error messages and asking it to debug the code
 
 The interface to ChatGPT is provided by this package: https://github.com/acheong08/ChatGPT
+
+## Initial prompt
+
+An initial prompt is sent to ChatGPT to trick it into thinking it's a code refactoring REPL. This will make it return shorter responses prefixed with a file name, to enable easier automated processing of the outputs. You can configure the intial prompt in `.env`.
 
 ## Access Tokens
 

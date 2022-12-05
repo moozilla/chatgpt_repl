@@ -1,3 +1,4 @@
+import subprocess
 from typing import List, Tuple
 
 class CommandProcessor:
@@ -5,7 +6,8 @@ class CommandProcessor:
         self.commands = {
             "/exit": self.exit_command,
             "/help": self.help_command,
-            "/file": self.file_command
+            "/file": self.file_command,
+            "/exec": self.exec_command
         }
 
     def is_command(self, prompt: str) -> bool:
@@ -15,7 +17,21 @@ class CommandProcessor:
     def process_command(self, command: str) -> bool:
         """Process the given command."""
         # Get the name and arguments of the command
-        command_parts = command.split(" ")
+        command_parts = []
+        current_arg = ""
+        in_quotes = False
+        for c in command:
+            if c == '"':
+                in_quotes = not in_quotes
+            elif c == " " and not in_quotes:
+                command_parts.append(current_arg)
+                current_arg = ""
+            else:
+                current_arg += c
+
+        # Add the final argument
+        command_parts.append(current_arg)
+
         command_name = command_parts[0]
         command_args = command_parts[1:]
 
@@ -49,6 +65,7 @@ class CommandProcessor:
             with open(filename, "r") as f:
                 data = f.read()
 
+            data = f"# {filename}\n{data}"
             prompt_prefix = " ".join(args[1:])
             if prompt_prefix:
                 data = f"{prompt_prefix}\n\n{data}"
@@ -56,4 +73,22 @@ class CommandProcessor:
             return False, data
         except IOError:
             print(f"Error: Could not read file {filename}")
+            return False, None
+
+    def exec_command(self, args: List[str]) -> Tuple[bool, str]:
+        """Execute a shell command and return its output."""
+        if len(args) == 0:
+            print("Usage: /exec \"<command>\" [<prompt_prefix>]")
+            return False, None
+
+        command = args[0]
+        prompt_prefix = " ".join(args[1:])
+        try:
+            output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
+            output = output.decode()
+            if prompt_prefix:
+                output = f"{prompt_prefix}\n\n{output}"
+            return False, output
+        except subprocess.CalledProcessError as e:
+            print(f"Error executing command: {e}")
             return False, None
