@@ -1,5 +1,7 @@
 import subprocess
 from typing import List, Tuple
+from prompt_toolkit.completion import NestedCompleter, Completion
+from prompt_toolkit.completion.filesystem import PathCompleter
 
 class CommandProcessor:
     def __init__(self):
@@ -8,6 +10,13 @@ class CommandProcessor:
             "/help": self.help_command,
             "/file": self.file_command,
             "/exec": self.exec_command
+        }
+
+        # Create a PathCompleter instance for filename completion.
+        self.filename_completer = PathCompleter()
+        # Create a lookup of argument completers for each command.
+        self.argument_completers = {
+            "/file": self.filename_completer
         }
 
     def is_command(self, prompt: str) -> bool:
@@ -92,3 +101,15 @@ class CommandProcessor:
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")
             return False, None
+
+class CommandCompleter(NestedCompleter):
+    def __init__(self, command_processor):
+        self.command_processor = command_processor
+
+        # Build the nested completer options based on the command processor.
+        nested_completer_options = {
+            command: self.command_processor.argument_completers.get(command)
+            for command, _ in self.command_processor.commands.items()
+        }
+
+        super().__init__(nested_completer_options)

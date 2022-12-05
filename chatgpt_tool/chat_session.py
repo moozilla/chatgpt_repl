@@ -1,6 +1,7 @@
 from typing import Dict
+from prompt_toolkit import prompt
 from revChatGPT.revChatGPT import Chatbot
-from .command_processor import CommandProcessor
+from .command_processor import CommandProcessor, CommandCompleter
 from .history_logger import HistoryLogger
 
 class ChatSession:
@@ -14,6 +15,7 @@ class ChatSession:
         self.chatbot = self.create_chatbot(config, conversation_id)
         self.chatbot.refresh_session() # use session token to fetch access token
         self.command_processor = CommandProcessor()
+        self.command_completer = CommandCompleter(self.command_processor)
 
     @staticmethod
     def create_config(session_token: str) -> Dict[str, str]:
@@ -52,14 +54,14 @@ class ChatSession:
         return response
 
     def run_prompt_loop(self):
-        """Run the input loop for the chat session."""
-        print("-- Enter /help for available commands, /exit to exit --\n")
+        """Run the input loop for the chat session, with tab completion."""
+        print("-- Enter /help for available commands, /exit to exit --")
         while True:
-            prompt = input("Enter a prompt: ")
+            raw_prompt = prompt("Enter a prompt: ", completer=self.command_completer, complete_while_typing=True)
             # Check if the user entered a command
-            if self.command_processor.is_command(prompt):
+            if self.command_processor.is_command(raw_prompt):
                 # Process the command and check if we should exit the input loop
-                should_exit, command_prompt = self.command_processor.process_command(prompt)
+                should_exit, command_prompt = self.command_processor.process_command(raw_prompt)
                 if should_exit:
                     break
 
@@ -71,7 +73,7 @@ class ChatSession:
                         print("\n" + response["message"] + "\n")
             else:
                 # Get a response from the chatbot
-                response = self.get_chat_response(prompt)
+                response = self.get_chat_response(raw_prompt)
                 if response is None:
                     continue
 
