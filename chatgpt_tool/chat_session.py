@@ -4,21 +4,23 @@ from .command_processor import CommandProcessor
 from .history_logger import HistoryLogger
 
 class ChatSession:
-    def __init__(self, access_token: str, initial_prompt: str, conversation_id: str = None):
+    def __init__(self, session_token: str, initial_prompt: str, conversation_id: str = None):
         """Initialize a new `ChatSession` instance."""
         self.initial_prompt = initial_prompt
         self.history_logger = HistoryLogger()
         self.conversation_id = conversation_id
 
-        config = self.create_config(access_token)
+        config = self.create_config(session_token)
         self.chatbot = self.create_chatbot(config, conversation_id)
+        self.chatbot.refresh_session() # use session token to fetch access token
         self.command_processor = CommandProcessor()
 
     @staticmethod
-    def create_config(access_token: str) -> Dict[str, str]:
+    def create_config(session_token: str) -> Dict[str, str]:
         """Create the configuration object to use when communicating with the chatbot API."""
         return {
-            "Authorization": access_token
+            "Authorization": "", # will be set using session_token
+            "session_token": session_token
         }
 
     @staticmethod
@@ -26,14 +28,19 @@ class ChatSession:
         """Create a new `Chatbot` instance."""
         return Chatbot(config, conversation_id)
 
-    def get_chat_response(self, prompt: str) -> Dict[str, str]:
+    def get_chat_response(self, prompt: str, is_retry: bool = False) -> Dict[str, str]:
         """Get a response from the chatbot for the given prompt."""
         response = self.chatbot.get_chat_response(prompt)
 
         if not isinstance(response, dict):
             if isinstance(response, ValueError):
-                print("Warning: The access token may be invalid")
-
+                if not is_retry:
+                    print("Warning: The access token may be invalid! Attempting to refresh session.")
+                    self.chatbot.refresh_session()
+                    return self.get_chat_response(prompt, True)
+                else:
+                    # Don't try again to avoid retry loop
+                    pass
             return None
 
         if self.conversation_id is None:

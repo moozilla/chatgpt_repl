@@ -11,4 +11,6 @@ The interface to ChatGPT is provided by this package: https://github.com/acheong
 
 ## Access Tokens
 
-Currently refreshing access tokens is a manual process. To make this easier I had ChatGPT reverse engineer it's own code and create a bookmarklet to extract an access token from the page. (See `get_access_token_bookmarklet.js`) This removes the need manual extract your token using dev tools.
+~~Currently refreshing access tokens is a manual process. To make this easier I had ChatGPT reverse engineer it's own code and create a bookmarklet to extract an access token from the page. (See `get_access_token_bookmarklet.js`) This removes the need manual extract your token using dev tools.~~
+
+See https://github.com/acheong08/ChatGPT#get-your-session-token, this should be saved in your .env file under `session_token`. The script will handle refreshing access tokens for you.
