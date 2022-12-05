@@ -4,8 +4,11 @@ from revChatGPT.revChatGPT import Chatbot
 from .command_processor import CommandProcessor, CommandCompleter
 from .history_logger import HistoryLogger
 
+
 class ChatSession:
-    def __init__(self, session_token: str, initial_prompt: str, conversation_id: str = None):
+    def __init__(
+        self, session_token: str, initial_prompt: str, conversation_id: str = None
+    ):
         """Initialize a new `ChatSession` instance."""
         self.initial_prompt = initial_prompt
         self.history_logger = HistoryLogger()
@@ -13,7 +16,6 @@ class ChatSession:
 
         config = self.create_config(session_token)
         self.chatbot = self.create_chatbot(config, conversation_id)
-        self.chatbot.refresh_session() # use session token to fetch access token
         self.command_processor = CommandProcessor()
         self.command_completer = CommandCompleter(self.command_processor)
 
@@ -21,8 +23,8 @@ class ChatSession:
     def create_config(session_token: str) -> Dict[str, str]:
         """Create the configuration object to use when communicating with the chatbot API."""
         return {
-            "Authorization": "", # will be set using session_token
-            "session_token": session_token
+            "Authorization": "",  # will be set using session_token
+            "session_token": session_token,
         }
 
     @staticmethod
@@ -32,12 +34,15 @@ class ChatSession:
 
     def get_chat_response(self, prompt: str, is_retry: bool = False) -> Dict[str, str]:
         """Get a response from the chatbot for the given prompt."""
-        response = self.chatbot.get_chat_response(prompt)
+        # TODO: update to use streaming now supported by revChatGPT
+        response = self.chatbot.get_chat_response(prompt, output="text")
 
         if not isinstance(response, dict):
             if isinstance(response, ValueError):
                 if not is_retry:
-                    print("Warning: The access token may be invalid! Attempting to refresh session.")
+                    print(
+                        "Warning: The access token may be invalid! Attempting to refresh session."
+                    )
                     self.chatbot.refresh_session()
                     return self.get_chat_response(prompt, True)
                 else:
@@ -57,11 +62,17 @@ class ChatSession:
         """Run the input loop for the chat session, with tab completion."""
         print("-- Enter /help for available commands, /exit to exit --")
         while True:
-            raw_prompt = prompt("Enter a prompt: ", completer=self.command_completer, complete_while_typing=True)
+            raw_prompt = prompt(
+                "Enter a prompt: ",
+                completer=self.command_completer,
+                complete_while_typing=True,
+            )
             # Check if the user entered a command
             if self.command_processor.is_command(raw_prompt):
                 # Process the command and check if we should exit the input loop
-                should_exit, command_prompt = self.command_processor.process_command(raw_prompt)
+                should_exit, command_prompt = self.command_processor.process_command(
+                    raw_prompt
+                )
                 if should_exit:
                     break
 
@@ -86,7 +97,7 @@ class ChatSession:
         print(f"> {self.initial_prompt}")
         initial_response = self.get_chat_response(self.initial_prompt)
         if initial_response is None:
-            # There was an error, most likely an expired session
+            print("No response. Most likely an expired session.")
             return
         print("\n" + initial_response["message"] + "\n")
 

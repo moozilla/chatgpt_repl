@@ -9,6 +9,27 @@ My vision for this tool is to automate some of the back-and-forth with ChatGPT f
 
 The interface to ChatGPT is provided by this package: https://github.com/acheong08/ChatGPT
 
+## Installation
+
+This project uses [Poetry](https://python-poetry.org/). Dependencies can be installed with:
+```
+poetry install
+```
+
+## Running the program
+
+First set up your `.env` file based on `.env.template`, then run:
+
+```
+chatgpt
+```
+
+## Running tests
+
+```
+pytest
+```
+
 ## Initial prompt
 
 An initial prompt is sent to ChatGPT to trick it into thinking it's a code refactoring REPL. This will make it return shorter responses prefixed with a file name, to enable easier automated processing of the outputs. You can configure the intial prompt in `.env`.

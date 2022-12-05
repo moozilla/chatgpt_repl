@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "chatgpt-repl"
+version = "0.1.0"
+description = "ChatGPT code refactoring REPL"
+authors = ["Moozilla <moozilla@protonmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "chatgpt_repl"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-dotenv = "^0.21.0"
+prompt-toolkit = "^3.0.33"
+revchatgpt = "^0.0.22"
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.10.0"
+pytest = "^7.2.0"
+pytest-mock = "^3.10.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+chatgpt = "chatgpt_repl.__main__:main"
