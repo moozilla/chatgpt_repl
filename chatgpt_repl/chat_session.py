@@ -9,17 +9,17 @@ from .response_processor import ResponseProcessor
 class ChatSession:
     def __init__(
         self,
+        session_name: str,
         session_token: str,
         initial_prompt: str,
         conversation_id: Optional[str] = None,
     ):
         """Initialize a new `ChatSession` instance."""
-        self.initial_prompt = initial_prompt
-        self.history_logger = HistoryLogger()
-        self.conversation_id = conversation_id
-
-        session_name = prompt("Enter session name: ")
         output_dir = f"outputs/{session_name}"
+
+        self.initial_prompt = initial_prompt
+        self.history_logger = HistoryLogger(session_name)
+        self.conversation_id = conversation_id
 
         config = self.create_config(session_token)
         self.chatbot = self.create_chatbot(config, conversation_id)

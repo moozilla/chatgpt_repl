@@ -10,7 +10,8 @@ def main():
     assert session_token is not None
     assert initial_prompt is not None
 
-    chat_session = ChatSession(session_token, initial_prompt)
+    session_name = input("Enter session name: ")
+    chat_session = ChatSession(session_name, session_token, initial_prompt)
     chat_session.chatbot.refresh_session()
     chat_session.start()
 

@@ -26,9 +26,10 @@ def mock_chatbot(mock_chatbot_message):
 
 @pytest.fixture
 def chat_session(mock_chatbot):
+    session_name = "pytest"
     initial_prompt = "How are you?"
 
-    chat_session = ChatSession(mock_session_token, initial_prompt)
+    chat_session = ChatSession(session_name, mock_session_token, initial_prompt)
     chat_session.chatbot = mock_chatbot
     return chat_session
 
