@@ -3,6 +3,10 @@ from prompt_toolkit import prompt
 from revChatGPT.revChatGPT import Chatbot
 from .command_processor import CommandProcessor, CommandCompleter
 from .history_logger import HistoryLogger
+from .response_processor import ResponseProcessor
+
+# TODO: hardcoded for now, maybe change later to have one per session?
+output_dir = "outputs"
 
 
 class ChatSession:
@@ -21,6 +25,7 @@ class ChatSession:
         self.chatbot = self.create_chatbot(config, conversation_id)
         self.command_processor = CommandProcessor()
         self.command_completer = CommandCompleter(self.command_processor)
+        self.response_processor = ResponseProcessor(output_dir)
 
     @staticmethod
     def create_config(session_token: str) -> Dict[str, str]:
@@ -72,34 +77,34 @@ class ChatSession:
             "-- /help for available commands, /exit to exit, option+Enter to submit --"
         )
         while True:
-            raw_prompt = prompt(
-                "Enter a prompt: ",
-                completer=self.command_completer,
-                complete_while_typing=True,
-                multiline=True,
-            )
-            # Check if the user entered a command
+            raw_prompt = self.get_raw_prompt()
             if self.command_processor.is_command(raw_prompt):
-                # Process the command and check if we should exit the input loop
                 should_exit, command_prompt = self.command_processor.process_command(
                     raw_prompt
                 )
                 if should_exit:
                     break
-
-                # Check if the command returned a prompt to use
                 if command_prompt is not None:
-                    # Get a response from the chatbot using the prompt returned by the command
-                    response = self.get_chat_response(command_prompt)
-                    if response is not None:
-                        print("\n" + response["message"] + "\n")
+                    self.handle_response(command_prompt)
             else:
-                # Get a response from the chatbot
-                response = self.get_chat_response(raw_prompt)
-                if response is None:
-                    continue
+                self.handle_response(raw_prompt)
 
-                print("\n" + response["message"] + "\n")
+    def get_raw_prompt(self):
+        return prompt(
+            "Enter a prompt: ",
+            completer=self.command_completer,
+            complete_while_typing=True,
+            multiline=True,
+        )
+
+    def process_command(self, raw_prompt):
+        return self.command_processor.process_command(raw_prompt)
+
+    def handle_response(self, prompt):
+        response = self.get_chat_response(prompt)
+        if response is not None:
+            parsed_response = self.response_processor.process_response(response)
+            print("\n" + parsed_response + "\n")
 
     def start(self):
         """Start the chat session."""

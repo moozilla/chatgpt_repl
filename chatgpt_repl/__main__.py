@@ -7,6 +7,8 @@ def main():
     load_dotenv()
     session_token = os.getenv("session_token")
     initial_prompt = os.getenv("initial_prompt")
+    assert session_token is not None
+    assert initial_prompt is not None
 
     chat_session = ChatSession(session_token, initial_prompt)
     chat_session.chatbot.refresh_session()

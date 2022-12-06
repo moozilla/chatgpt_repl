@@ -83,7 +83,7 @@ def test_start(chat_session, mocker, capsys):
     # Check the print output
     assert (
         captured.out
-        == "Sending initial prompt to ChatGPT\n> How are you?\n\ntest response\n\n"
+        == "Sending initial prompt to ChatGPT\n> How are you?\n...\n\ntest response\n\n"
     )
 
     # Check that run_prompt_loop was called
