@@ -11,7 +11,7 @@ packages = [{include = "chatgpt_repl"}]
 python = "^3.10"
 python-dotenv = "^0.21.0"
 prompt-toolkit = "^3.0.33"
-revchatgpt = "^0.0.22"
+revchatgpt = "^0.0.24"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
