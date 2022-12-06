@@ -42,6 +42,7 @@ class ChatSession:
     ) -> Optional[Dict[str, str]]:
         """Get a response from the chatbot for the given prompt."""
         # TODO: update to use streaming now supported by revChatGPT
+        print("...")
         response = self.chatbot.get_chat_response(prompt, output="text")
 
         if not isinstance(response, dict):
@@ -66,13 +67,16 @@ class ChatSession:
         return response
 
     def run_prompt_loop(self):
-        """Run the input loop for the chat session, with tab completion."""
-        print("-- Enter /help for available commands, /exit to exit --")
+        """Run the input loop for the chat session."""
+        print(
+            "-- /help for available commands, /exit to exit, option+Enter to submit --"
+        )
         while True:
             raw_prompt = prompt(
                 "Enter a prompt: ",
                 completer=self.command_completer,
                 complete_while_typing=True,
+                multiline=True,
             )
             # Check if the user entered a command
             if self.command_processor.is_command(raw_prompt):
