@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 from prompt_toolkit import prompt
 from revChatGPT.revChatGPT import Chatbot
 from .command_processor import CommandProcessor, CommandCompleter
@@ -7,7 +7,10 @@ from .history_logger import HistoryLogger
 
 class ChatSession:
     def __init__(
-        self, session_token: str, initial_prompt: str, conversation_id: str = None
+        self,
+        session_token: str,
+        initial_prompt: str,
+        conversation_id: Optional[str] = None,
     ):
         """Initialize a new `ChatSession` instance."""
         self.initial_prompt = initial_prompt
@@ -28,11 +31,15 @@ class ChatSession:
         }
 
     @staticmethod
-    def create_chatbot(config: Dict[str, str], conversation_id: str = None) -> Chatbot:
+    def create_chatbot(
+        config: Dict[str, str], conversation_id: Optional[str] = None
+    ) -> Chatbot:
         """Create a new `Chatbot` instance."""
         return Chatbot(config, conversation_id)
 
-    def get_chat_response(self, prompt: str, is_retry: bool = False) -> Dict[str, str]:
+    def get_chat_response(
+        self, prompt: str, is_retry: bool = False
+    ) -> Optional[Dict[str, str]]:
         """Get a response from the chatbot for the given prompt."""
         # TODO: update to use streaming now supported by revChatGPT
         response = self.chatbot.get_chat_response(prompt, output="text")

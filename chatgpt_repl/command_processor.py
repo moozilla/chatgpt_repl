@@ -1,7 +1,8 @@
 import subprocess
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from prompt_toolkit.completion import NestedCompleter, Completion
 from prompt_toolkit.completion.filesystem import PathCompleter
+
 
 class CommandProcessor:
     def __init__(self):
@@ -9,21 +10,19 @@ class CommandProcessor:
             "/exit": self.exit_command,
             "/help": self.help_command,
             "/file": self.file_command,
-            "/exec": self.exec_command
+            "/exec": self.exec_command,
         }
 
         # Create a PathCompleter instance for filename completion.
         self.filename_completer = PathCompleter()
         # Create a lookup of argument completers for each command.
-        self.argument_completers = {
-            "/file": self.filename_completer
-        }
+        self.argument_completers = {"/file": self.filename_completer}
 
     def is_command(self, prompt: str) -> bool:
         """Check if the given prompt is a command."""
         return prompt.startswith("/")
 
-    def process_command(self, command: str) -> bool:
+    def process_command(self, command: str) -> Tuple[bool, Optional[str]]:
         """Process the given command."""
         # Get the name and arguments of the command
         command_parts = []
@@ -47,23 +46,23 @@ class CommandProcessor:
         command_handler = self.commands.get(command_name)
         if command_handler is None:
             print(f"Unrecognized command: {command_name}")
-            return False
+            return False, None
 
         # Call the command handler
         return command_handler(command_args)
 
-    def exit_command(self, args: List[str]) -> Tuple[bool, str]:
+    def exit_command(self, args: List[str]) -> Tuple[bool, Optional[str]]:
         """Exit the program."""
         return True, None
 
-    def help_command(self, args: List[str]) -> Tuple[bool, str]:
+    def help_command(self, args: List[str]) -> Tuple[bool, Optional[str]]:
         """List available commands."""
         print("Available commands:")
         for command_name, command_handler in self.commands.items():
             print(f"* {command_name} - {command_handler.__doc__}")
         return False, None
 
-    def file_command(self, args: List[str]) -> Tuple[bool, str]:
+    def file_command(self, args: List[str]) -> Tuple[bool, Optional[str]]:
         """Read the contents of a file and use it as a prompt."""
         if len(args) == 0:
             print("Usage: /file <filename> [<prompt_prefix>]")
@@ -84,16 +83,18 @@ class CommandProcessor:
             print(f"Error: Could not read file {filename}")
             return False, None
 
-    def exec_command(self, args: List[str]) -> Tuple[bool, str]:
+    def exec_command(self, args: List[str]) -> Tuple[bool, Optional[str]]:
         """Execute a shell command and return its output."""
         if len(args) == 0:
-            print("Usage: /exec \"<command>\" [<prompt_prefix>]")
+            print('Usage: /exec "<command>" [<prompt_prefix>]')
             return False, None
 
         command = args[0]
         prompt_prefix = " ".join(args[1:])
         try:
-            output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
+            output = subprocess.check_output(
+                command, shell=True, stderr=subprocess.STDOUT
+            )
             output = output.decode()
             if prompt_prefix:
                 output = f"{prompt_prefix}\n\n{output}"
@@ -101,6 +102,7 @@ class CommandProcessor:
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")
             return False, None
+
 
 class CommandCompleter(NestedCompleter):
     def __init__(self, command_processor):
