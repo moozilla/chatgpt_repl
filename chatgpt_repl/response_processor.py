@@ -6,11 +6,13 @@ class ResponseProcessor:
     def __init__(self, output_dir: str):
         self.output_dir = output_dir
         self.processors = [
+            self.process_was_cutoff,
             self.process_code_blocks,
         ]
 
         # Use a counter to keep track of code block numbers
         self.code_block_counter = 0
+        self.was_cutoff = False
 
     def process_response(self, response: Dict[str, str]) -> str:
         """Process the chatbot response."""
@@ -19,7 +21,16 @@ class ResponseProcessor:
         # Apply processing functions
         for processor in self.processors:
             text = processor(text)
+            if self.was_cutoff:
+                break
 
+        return text
+
+    def process_was_cutoff(self, text: str) -> str:
+        """Try to detect if the response got cutoff and set flag if it did."""
+        # Try to detect unmatched codeblocks
+        if "```" in text and text.count("```") % 2 == 1:
+            self.was_cutoff = True
         return text
 
     def process_code_blocks(self, text: str) -> str:
@@ -38,7 +49,7 @@ class ResponseProcessor:
             if not in_code_block:
                 # If not in a code block, add line to output
                 parsed_text += line + "\n"
-            if line == "```":
+            if line.startswith("```"):
                 # If line is start or end of code block, toggle flag
                 in_code_block = not in_code_block
                 if not in_code_block:
@@ -48,6 +59,9 @@ class ResponseProcessor:
                     code_lines = []
                     if filename:
                         parsed_text += f"<CODE BLOCK {self.code_block_counter} - saved to {filename}>\n"
+                else:
+                    # If code block just started, skip this line
+                    continue
             elif in_code_block:
                 # If in code block, add line to code lines
                 code_lines.append(line)

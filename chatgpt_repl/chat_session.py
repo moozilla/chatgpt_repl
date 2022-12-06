@@ -5,9 +5,6 @@ from .command_processor import CommandProcessor, CommandCompleter
 from .history_logger import HistoryLogger
 from .response_processor import ResponseProcessor
 
-# TODO: hardcoded for now, maybe change later to have one per session?
-output_dir = "outputs"
-
 
 class ChatSession:
     def __init__(
@@ -20,6 +17,9 @@ class ChatSession:
         self.initial_prompt = initial_prompt
         self.history_logger = HistoryLogger()
         self.conversation_id = conversation_id
+
+        session_name = prompt("Enter session name: ")
+        output_dir = f"outputs/{session_name}"
 
         config = self.create_config(session_token)
         self.chatbot = self.create_chatbot(config, conversation_id)
@@ -105,6 +105,8 @@ class ChatSession:
         if response is not None:
             parsed_response = self.response_processor.process_response(response)
             print("\n" + parsed_response + "\n")
+            if self.response_processor.was_cutoff:
+                print("RESPONSE MAY HAVE BEEN CUT OFF")
 
     def start(self):
         """Start the chat session."""
