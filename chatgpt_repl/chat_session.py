@@ -48,19 +48,16 @@ class ChatSession:
         """Get a response from the chatbot for the given prompt."""
         # TODO: update to use streaming now supported by revChatGPT
         print("...")
-        response = self.chatbot.get_chat_response(prompt, output="text")
-
-        if not isinstance(response, dict):
-            if isinstance(response, ValueError):
-                if not is_retry:
-                    print(
-                        "Warning: The access token may be invalid! Attempting to refresh session."
-                    )
-                    self.chatbot.refresh_session()
-                    return self.get_chat_response(prompt, True)
-                else:
-                    # Don't try again to avoid retry loop
-                    pass
+        try:
+            response = self.chatbot.get_chat_response(prompt, output="text")
+        except ValueError:
+            # TODO: this may be unnecessary, revChatGPT tries to autorefresh now
+            if not is_retry:
+                print(
+                    "Warning: The access token may be invalid! Attempting to refresh session."
+                )
+                self.chatbot.refresh_session()
+                return self.get_chat_response(prompt, True)
             return None
 
         if self.conversation_id is None:
